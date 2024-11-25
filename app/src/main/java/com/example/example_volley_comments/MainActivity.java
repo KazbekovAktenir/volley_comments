@@ -4,20 +4,16 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
@@ -28,86 +24,58 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "MainActivity";
     private String url = "https://jsonplaceholder.typicode.com/comments";
-    TextView tData;
-    Button button;
 
-    private static final String TAG = "taggggg";
+    private RecyclerView recyclerView;
+    private Button button;
+    private CommentAdapter adapter;
+    private List<Comment> commentList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
 
-        tData = findViewById(R.id.tData);
+        recyclerView = findViewById(R.id.recyclerView);
         button = findViewById(R.id.button);
 
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getData();
-            }
+        adapter = new CommentAdapter(commentList, comment -> {
+            //обработка нажатия на элемент
+            Log.i(TAG, "Selected Comment: " + comment.toString());
         });
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
+
+        button.setOnClickListener(v -> getData());
     }
 
     private void getData() {
-        //query queue
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        // create request for GET-query
-//        StringRequest stringRequest = new StringRequest(
-//                Request.Method.GET,
-//                url,
-//                new Response.Listener<String>() {
-//                    @Override
-//                    public void onResponse(String response) {
-//                        //success
-//                        tData.setText("Answer from server: "+ response);
-//                    }
-//                },
-//                new Response.ErrorListener() {
-//                    @Override
-//                    public void onErrorResponse(VolleyError error) {
-//                        //error
-//                        tData.setText("Error: "+error.getMessage());
-//                    }
-//                });
-//
-//        requestQueue.add(stringRequest);
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET,
                 url, null,
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
-                        //success
-                        List<Comment> comments = new ArrayList<>();
+                        commentList.clear();
 
                         try {
                             for (int i = 0; i < response.length(); i++) {
                                 JSONObject commJson = response.getJSONObject(i);
-                                Comment comment = new Comment(commJson.getInt("id"),
+                                Comment comment = new Comment(
+                                        commJson.getInt("id"),
                                         commJson.getString("name"),
                                         commJson.getString("email"),
                                         commJson.getString("body")
                                 );
-                                comments.add(comment);
+                                commentList.add(comment);
                             }
-
-                            for (Comment comment : comments) {
-                                Log.i(TAG, comment.toString());
-                            }
-
+                            adapter.notifyDataSetChanged();
                         } catch (Exception ex) {
-                            Log.e(TAG, "Server error: " + ex.getMessage());
+                            Log.e(TAG, "Error parsing JSON: " + ex.getMessage());
                         }
-
-
                     }
                 },
                 new Response.ErrorListener() {
@@ -116,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.e(TAG, "Error: " + error.getMessage());
                     }
                 });
-        requestQueue.add(jsonArrayRequest);
 
+        requestQueue.add(jsonArrayRequest);
     }
 }
