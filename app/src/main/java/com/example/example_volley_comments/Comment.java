@@ -1,12 +1,10 @@
 package com.example.example_volley_comments;
 
-import androidx.annotation.NonNull;
-
 public class Comment {
-    int id;
-    String name;
-    String email;
-    String body;
+    private int id;
+    private String name;
+    private String email;
+    private String body;
 
     public Comment(int id, String name, String email, String body) {
         this.id = id;
@@ -31,12 +29,13 @@ public class Comment {
         return body;
     }
 
-    @NonNull
     @Override
     public String toString() {
-        return "Comment " + id + "{" +
-                "\nName:" + name +
-                "\nEmail:" + email +
-                "\nBody:" + body + "}";
+        return "Comment {" +
+                "ID: " + id +
+                ", Name: '" + name + '\'' +
+                ", Email: '" + email + '\'' +
+                ", Body: '" + body + '\'' +
+                '}';
     }
 }
